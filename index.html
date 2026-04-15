@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-trabajo — Taller de IA Operativa</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple: #6B21A8;
+  --purple-mid: #7C3AED;
+  --purple-dark: #1E1B4B;
+  --purple-light: #F5F3FF;
+  --sand: #f4e6d0;
+  --text: #1a1a2e;
+  --muted: #6b7280;
+  --border: #e5e0f8;
+  --bg: #fafaf8;
+  --white: #ffffff;
+  --green: #059669;
+  --green-light: #d1fae5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+.header {
+  background: var(--purple-dark);
+  color: white;
+  padding: 2.5rem 1.5rem 2rem;
+  text-align: center;
+}
+.header-tag { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #a78bfa; margin-bottom: .75rem; }
+.header h1 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 400; color: white; margin-bottom: .5rem; line-height: 1.3; }
+.header p { font-size: 14px; color: #c4b5fd; max-width: 480px; margin: 0 auto; line-height: 1.6; }
+.tiempo { display: inline-block; background: rgba(167,139,250,0.2); border: 1px solid rgba(167,139,250,0.4); color: #c4b5fd; font-size: 12px; padding: 4px 12px; border-radius: 20px; margin-top: 1rem; }
+
+.progress-wrap { background: var(--white); border-bottom: 1px solid var(--border); padding: .75rem 1.5rem; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+.progress-bar { flex: 1; height: 4px; background: var(--purple-light); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--purple-mid); border-radius: 2px; transition: width .4s ease; width: 0%; }
+.progress-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+.form-wrap { max-width: 620px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+.question { margin-bottom: 2rem; opacity: 0; transform: translateY(10px); animation: fadeUp .4s forwards; }
+.question:nth-child(1){animation-delay:.05s}.question:nth-child(2){animation-delay:.1s}.question:nth-child(3){animation-delay:.15s}.question:nth-child(4){animation-delay:.2s}.question:nth-child(5){animation-delay:.25s}.question:nth-child(6){animation-delay:.3s}.question:nth-child(7){animation-delay:.35s}.question:nth-child(8){animation-delay:.4s}.question:nth-child(9){animation-delay:.45s}
+@keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+.q-num { font-size: 11px; font-weight: 600; color: var(--purple-mid); letter-spacing: .06em; text-transform: uppercase; margin-bottom: .4rem; }
+.q-label { font-size: 15px; font-weight: 500; color: var(--purple-dark); margin-bottom: .3rem; line-height: 1.45; }
+.q-hint { font-size: 12px; color: var(--muted); margin-bottom: .75rem; line-height: 1.5; }
+
+input[type=text], input[type=email], textarea {
+  font-family: 'Inter', sans-serif; font-size: 14px; padding: 10px 13px;
+  border: 1.5px solid var(--border); border-radius: 8px; color: var(--text);
+  background: var(--white); outline: none; transition: border .15s, box-shadow .15s; width: 100%;
+}
+input[type=text]:focus, input[type=email]:focus, textarea:focus {
+  border-color: var(--purple-mid); box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
+}
+textarea { resize: vertical; min-height: 90px; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 13px; cursor: pointer; transition: all .15s; user-select: none;
+}
+.option:hover { border-color: var(--purple-mid); background: var(--purple-light); }
+.option.selected { border-color: var(--purple-mid); background: var(--purple-light); }
+.option-box {
+  width: 18px; height: 18px; border: 1.5px solid #c4b5fd; border-radius: 4px;
+  flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center;
+  transition: all .15s; background: white;
+}
+.option.selected .option-box { background: var(--purple-mid); border-color: var(--purple-mid); }
+.option-check { display: none; color: white; font-size: 10px; font-weight: bold; }
+.option.selected .option-check { display: block; }
+.option-text { font-size: 14px; color: var(--text); line-height: 1.4; flex: 1; }
+
+.radio-options { display: flex; flex-direction: column; gap: 8px; }
+.radio-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 13px; cursor: pointer; transition: all .15s; user-select: none;
+}
+.radio-option:hover { border-color: var(--purple-mid); background: var(--purple-light); }
+.radio-option.selected { border-color: var(--purple-mid); background: var(--purple-light); }
+.radio-dot {
+  width: 18px; height: 18px; border: 1.5px solid #c4b5fd; border-radius: 50%;
+  flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center;
+  background: white; transition: all .15s;
+}
+.radio-option.selected .radio-dot { border-color: var(--purple-mid); background: var(--purple-mid); }
+.radio-inner { width: 7px; height: 7px; background: white; border-radius: 50%; display: none; }
+.radio-option.selected .radio-inner { display: block; }
+.radio-content { flex: 1; }
+.radio-title { font-size: 14px; color: var(--text); font-weight: 500; line-height: 1.4; }
+.radio-sub { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+/* PRICE BADGE */
+.price-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; margin-left: 6px; }
+.price-teams { background: #dbeafe; color: #1e3a8a; }
+.price-ind { background: #fef3c7; color: #92400e; }
+.price-free { background: #f3f4f6; color: #374151; }
+
+/* EXTRA INPUT en opciones */
+.extra-input-wrap { margin-top: 8px; display: none; }
+.extra-input-wrap.visible { display: flex; flex-direction: column; gap: 6px; }
+.extra-row { display: flex; gap: 6px; align-items: center; }
+.extra-row input { flex: 1; }
+.btn-add-row {
+  font-size: 12px; font-weight: 500; color: var(--purple-mid);
+  background: none; border: 1px dashed var(--purple-mid); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; margin-top: 4px; transition: all .15s;
+  align-self: flex-start;
+}
+.btn-add-row:hover { background: var(--purple-light); }
+.btn-remove-row { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; }
+.btn-remove-row:hover { color: #ef4444; }
+
+.section-divider { border: none; border-top: 1px dashed var(--border); margin: 2rem 0; }
+
+.submit-wrap { margin-top: 2.5rem; text-align: center; }
+.btn-submit {
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+  padding: 13px 36px; background: var(--purple-mid); color: white; border: none;
+  border-radius: 8px; cursor: pointer; transition: background .15s, transform .1s;
+}
+.btn-submit:hover { background: var(--purple); transform: translateY(-1px); }
+.submit-hint { font-size: 12px; color: var(--muted); margin-top: .75rem; }
+
+.success { display: none; text-align: center; padding: 3rem 1.5rem; }
+.success-icon { width: 56px; height: 56px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 24px; }
+.success h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 400; color: var(--purple-dark); margin-bottom: .5rem; }
+.success p { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 380px; margin: 0 auto; }
+.success-detail { margin: 1.5rem auto 0; background: var(--purple-light); border-radius: 10px; padding: 1rem 1.25rem; text-align: left; max-width: 480px; }
+.success-detail h4 { font-size: 12px; font-weight: 600; color: var(--purple-dark); margin-bottom: .6rem; text-transform: uppercase; letter-spacing: .06em; }
+.summary-item { font-size: 13px; color: var(--text); padding: 6px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+.summary-item:last-child { border-bottom: none; }
+.summary-label { font-weight: 500; color: var(--muted); font-size: 11px; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .04em; }
+
+.footer { text-align: center; padding: 1.5rem; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); }
+.footer span { color: var(--purple-mid); font-weight: 500; }
+
+@media (max-width: 480px) {
+  .header h1 { font-size: 1.4rem; }
+  .form-wrap { padding: 1.5rem 1rem 3rem; }
+  .row2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">Viviana Silvera · Arquitectura de Crecimiento</div>
+  <h1>Pre-trabajo: Taller de IA Operativa</h1>
+  <p>Respondé estas preguntas antes de nuestra sesión. Con esto personalizo exactamente los módulos que vamos a trabajar.</p>
+  <span class="tiempo">⏱ 5 minutos</span>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <span class="progress-label" id="progress-label">0 / 8</span>
+</div>
+
+<div class="form-wrap" id="form-section">
+
+  <!-- P1: Quién completa -->
+  <div class="question">
+    <div class="q-num">Pregunta 1</div>
+    <div class="q-label">¿Quién completa este formulario?</div>
+    <div class="q-hint">Esto me ayuda a entender desde qué lugar hablás.</div>
+    <div class="radio-options" id="q1">
+      <label class="radio-option" onclick="selectRadio(this,'q1')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Soy el/la dueño/a o socio/a de la empresa</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q1')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Soy el/la responsable del equipo de consultores</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q1')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Soy un consultor del equipo que va a participar</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- P2: Nombre y empresa -->
+  <div class="question">
+    <div class="q-num">Pregunta 2</div>
+    <div class="q-label">Nombre y empresa</div>
+    <div class="row2">
+      <input type="text" id="q2a" placeholder="Tu nombre" oninput="updateProgress()">
+      <input type="text" id="q2b" placeholder="Nombre de la empresa" oninput="updateProgress()">
+    </div>
+  </div>
+
+  <!-- P3: Participantes -->
+  <div class="question">
+    <div class="q-num">Pregunta 3</div>
+    <div class="q-label">¿Cuántas personas del equipo van a participar del taller?</div>
+    <input type="text" id="q3" placeholder="Ej: 4 consultores + yo" oninput="updateProgress()" style="max-width:280px">
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- P4: Herramientas -->
+  <div class="question">
+    <div class="q-num">Pregunta 4</div>
+    <div class="q-label">¿Qué herramientas usan hoy para la operación?</div>
+    <div class="q-hint">Marcá todas las que apliquen.</div>
+    <div class="options" id="q4">
+      <label class="option" onclick="toggleCheck(this,'q4')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Excel / Google Sheets</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q4')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Sistema contable (Tango, Xubio, Bejerman u otro)</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q4')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">ERP (SAP, Odoo u otro)</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q4')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Solo email y papel</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q4'); showMultiOther('other-q4')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Otra/s herramienta/s</span>
+      </label>
+      <div class="extra-input-wrap" id="other-q4">
+        <div id="other-q4-rows">
+          <div class="extra-row">
+            <input type="text" placeholder="¿Cuál?" oninput="updateProgress()">
+            <button class="btn-remove-row" onclick="removeRow(this)" title="Eliminar">×</button>
+          </div>
+        </div>
+        <button class="btn-add-row" onclick="addRow('other-q4-rows', '¿Otra herramienta?')">+ Agregar otra</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- P5: Procesos manuales -->
+  <div class="question">
+    <div class="q-num">Pregunta 5</div>
+    <div class="q-label">¿Cuáles de estos procesos hacen de forma manual hoy?</div>
+    <div class="q-hint">Marcá todos los que apliquen — estos son los candidatos para el taller.</div>
+    <div class="options" id="q5">
+      <label class="option" onclick="toggleCheck(this,'q5')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Reporte de flujo de fondos</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q5')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Clasificación de gastos e ingresos por extracto bancario</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q5')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Informe de gestión mensual para clientes</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q5')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Control de cobranzas y deudores</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q5')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Conciliación bancaria</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q5')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Control de gestión de obra / proyecto inmobiliario</span>
+      </label>
+      <label class="option" onclick="toggleCheck(this,'q5'); showMultiOther('other-q5')">
+        <div class="option-box"><span class="option-check">✓</span></div>
+        <span class="option-text">Otro/s proceso/s</span>
+      </label>
+      <div class="extra-input-wrap" id="other-q5">
+        <div id="other-q5-rows">
+          <div class="extra-row">
+            <input type="text" placeholder="Describí el proceso" oninput="updateProgress()">
+            <button class="btn-remove-row" onclick="removeRow(this)" title="Eliminar">×</button>
+          </div>
+        </div>
+        <button class="btn-add-row" onclick="addRow('other-q5-rows', 'Otro proceso')">+ Agregar otro proceso</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- P6: Qué consume más tiempo -->
+  <div class="question">
+    <div class="q-num">Pregunta 6</div>
+    <div class="q-label">De esos procesos, ¿cuál es el que más tiempo les consume por mes?</div>
+    <div class="q-hint">Esto define por dónde arrancamos. Si podés, mencioná cuánto tiempo les lleva.</div>
+    <textarea id="q6" placeholder="Ej: el informe de gestión mensual — entre prepararlo y mandarlo nos lleva 3 horas por cliente..." oninput="updateProgress()"></textarea>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- P7: Familiaridad con IA -->
+  <div class="question">
+    <div class="q-num">Pregunta 7</div>
+    <div class="q-label">¿Cómo describirías el nivel de familiaridad del equipo con herramientas de IA?</div>
+    <div class="radio-options" id="q7">
+      <label class="radio-option" onclick="selectRadio(this,'q7')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Cero experiencia — nunca las usamos</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q7')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Probamos alguna vez pero no las incorporamos</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q7')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Algunos del equipo las usan seguido</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q7')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Todo el equipo ya trabaja con IA regularmente</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- P8: Presupuesto Claude -->
+  <div class="question">
+    <div class="q-num">Pregunta 8</div>
+    <div class="q-label">Para implementar el sistema después del taller, ¿qué opción se ajusta mejor a su contexto?</div>
+    <div class="q-hint">Cada opción tiene capacidades distintas — esto me ayuda a diseñar el sistema correcto para ustedes.</div>
+    <div class="radio-options" id="q8">
+      <label class="radio-option" onclick="selectRadio(this,'q8')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Claude Teams <span class="price-badge price-teams">~$30 USD/persona/mes</span></div>
+          <div class="radio-sub">Proyectos compartidos — todos los consultores trabajan con el mismo sistema estandarizado.</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q8')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Plan individual por consultor <span class="price-badge price-ind">~$20 USD/persona/mes</span></div>
+          <div class="radio-sub">Cada consultor tiene su propio espacio. El sistema se replica manualmente pero funciona bien.</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q8')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">Versión gratuita por ahora <span class="price-badge price-free">$0</span></div>
+          <div class="radio-sub">Tiene límites de uso diario, pero sirve para evaluar el flujo antes de comprometerse.</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'q8')">
+        <div class="radio-dot"><div class="radio-inner"></div></div>
+        <div class="radio-content">
+          <div class="radio-title">No lo definimos todavía</div>
+          <div class="radio-sub">Lo conversamos durante el taller.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- P9 (antes P7): Objetivo -->
+  <div class="question">
+    <div class="q-num">Pregunta 9 — opcional</div>
+    <div class="q-label">¿Hay algo que quieras que trabajemos, o contexto que me ayude a preparar mejor la sesión?</div>
+    <textarea id="q9" placeholder="Cualquier cosa que sientas que es relevante saber antes del taller..." oninput="updateProgress()" style="min-height:70px;"></textarea>
+  </div>
+
+  <div class="submit-wrap">
+    <button class="btn-submit" onclick="submitForm()">Enviar pre-trabajo →</button>
+    <div class="submit-hint">Recibís un resumen de tus respuestas al instante.</div>
+  </div>
+
+</div>
+
+<!-- SUCCESS -->
+<div class="success" id="success-section">
+  <div class="success-icon">✓</div>
+  <h2>¡Perfecto, gracias!</h2>
+  <p>Ya tengo lo que necesito para preparar el taller. El último paso: enviame tus respuestas tocando el botón.</p>
+
+  <div style="margin-top:1.25rem;">
+    <a id="btn-enviar-mail" href="#" style="display:inline-block;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;padding:12px 28px;background:#7C3AED;color:white;border-radius:8px;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='#6B21A8'" onmouseout="this.style.background='#7C3AED'">
+      Enviar respuestas por mail →
+    </a>
+    <div style="font-size:12px;color:#6b7280;margin-top:.6rem;">Abre tu cliente de correo con todo pre-armado. Solo tocás enviar.</div>
+  </div>
+
+  <div class="success-detail" id="summary-box" style="margin-top:1.5rem;">
+    <h4>Resumen de tus respuestas</h4>
+    <div id="summary-content"></div>
+  </div>
+</div>
+
+<div class="footer">
+  Taller de IA Operativa · <span>Viviana Silvera</span> · vivianasilvera.com
+</div>
+
+<script>
+const TOTAL_Q = 8; // pregunta 9 es opcional
+
+function toggleCheck(el, groupId) {
+  el.classList.toggle('selected');
+  updateProgress();
+}
+
+function showMultiOther(id) {
+  const wrap = document.getElementById(id);
+  const parentOption = wrap.previousElementSibling; // the label before
+  // Check if the "Otro" option is selected
+  const allOptions = wrap.closest('.options').querySelectorAll('.option');
+  const lastOption = allOptions[allOptions.length - 2]; // the "Otro" label
+  if (lastOption && lastOption.classList.contains('selected')) {
+    wrap.classList.add('visible');
+  } else {
+    wrap.classList.remove('visible');
+  }
+}
+
+function addRow(containerId, placeholder) {
+  const container = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'extra-row';
+  row.innerHTML = `<input type="text" placeholder="${placeholder}" oninput="updateProgress()"><button class="btn-remove-row" onclick="removeRow(this)" title="Eliminar">×</button>`;
+  container.appendChild(row);
+}
+
+function removeRow(btn) {
+  const row = btn.parentElement;
+  const container = row.parentElement;
+  if (container.querySelectorAll('.extra-row').length > 1) {
+    row.remove();
+  } else {
+    row.querySelector('input').value = '';
+  }
+  updateProgress();
+}
+
+function selectRadio(el, groupId) {
+  document.getElementById(groupId).querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  updateProgress();
+}
+
+function getAnswered() {
+  let count = 0;
+  if (document.getElementById('q1').querySelectorAll('.selected').length > 0) count++;
+  if (document.getElementById('q2a').value.trim() || document.getElementById('q2b').value.trim()) count++;
+  if (document.getElementById('q3').value.trim()) count++;
+  if (document.getElementById('q4').querySelectorAll('.selected').length > 0) count++;
+  if (document.getElementById('q5').querySelectorAll('.selected').length > 0) count++;
+  if (document.getElementById('q6').value.trim()) count++;
+  if (document.getElementById('q7').querySelectorAll('.selected').length > 0) count++;
+  if (document.getElementById('q8').querySelectorAll('.selected').length > 0) count++;
+  return count;
+}
+
+function updateProgress() {
+  const answered = getAnswered();
+  const pct = Math.round(answered / TOTAL_Q * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = answered + ' / ' + TOTAL_Q;
+}
+
+function getChecked(groupId) {
+  const vals = [];
+  document.getElementById(groupId).querySelectorAll('.option.selected .option-text').forEach(el => {
+    vals.push(el.textContent.trim());
+  });
+  return vals.length ? vals.join(', ') : '—';
+}
+
+function getRadioText(groupId) {
+  const sel = document.getElementById(groupId).querySelector('.radio-option.selected .radio-title');
+  return sel ? sel.textContent.trim() : '—';
+}
+
+function submitForm() {
+  const nombre = document.getElementById('q2a').value.trim();
+  if (!nombre) {
+    alert('Por favor ingresá tu nombre antes de enviar.');
+    return;
+  }
+  if (getAnswered() < 4) {
+    alert('Por favor respondé al menos las preguntas 1 a 6 antes de enviar.');
+    return;
+  }
+
+  const empresa = document.getElementById('q2b').value.trim();
+  const summary = [
+    { label: 'Rol', value: getRadioText('q1') },
+    { label: 'Nombre', value: nombre + (empresa ? ' · ' + empresa : '') },
+    { label: 'Participantes', value: document.getElementById('q3').value.trim() || '—' },
+    { label: 'Herramientas actuales', value: getChecked('q4') },
+    { label: 'Procesos manuales', value: getChecked('q5') },
+    { label: 'Mayor consumo de tiempo', value: document.getElementById('q6').value.trim() || '—' },
+    { label: 'Familiaridad con IA', value: getRadioText('q7') },
+    { label: 'Opción de herramienta', value: getRadioText('q8') },
+    { label: 'Notas adicionales', value: document.getElementById('q9').value.trim() || '—' },
+  ];
+
+  document.getElementById('summary-content').innerHTML = summary.map(s => `
+    <div class="summary-item">
+      <span class="summary-label">${s.label}</span>${s.value}
+    </div>`).join('');
+
+  // Armar el mail a Viviana con todas las respuestas
+  const subject = encodeURIComponent('Pre-trabajo Taller IA — ' + nombre + (empresa ? ' (' + empresa + ')' : ''));
+  const body = encodeURIComponent(
+    'PRE-TRABAJO — TALLER DE IA OPERATIVA\n' +
+    '=====================================\n\n' +
+    summary.map(s => s.label.toUpperCase() + ':\n' + s.value).join('\n\n') +
+    '\n\n=====================================\n' +
+    'Enviado desde el formulario de pre-trabajo.'
+  );
+  const mailtoLink = 'mailto:rsilveraviviana@gmail.com?subject=' + subject + '&body=' + body;
+
+  document.getElementById('form-section').style.display = 'none';
+  document.getElementById('success-section').style.display = 'block';
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('progress-label').textContent = '8 / 8';
+
+  // Guardar link del mail para el botón
+  document.getElementById('btn-enviar-mail').href = mailtoLink;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
